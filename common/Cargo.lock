@@ -3,17 +3,5 @@
 version = 3
 
 [[package]]
-name = "adv"
-version = "0.1.0"
-dependencies = [
- "common",
- "d1",
-]
-
-[[package]]
 name = "common"
-version = "0.1.0"
-
-[[package]]
-name = "d1"
 version = "0.1.0"

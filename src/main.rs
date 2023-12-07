@@ -13,11 +13,19 @@ fn main() {
 
     // Day 2
     //
-    let input = adv_io::read_input("d2/input");
-    let res1 = d2::solution1::sum_of_possible_games_ids(&input);
+    // let input = adv_io::read_input("d2/input");
+    // let res1 = d2::solution1::sum_of_possible_games_ids(&input);
+    // println!("{}", res1);
+
+    // let res2 = d2::solution2::sum_of_powers(&input);
+    // println!("{}", res2)
+
+    // Day 3
+    //
+    let input = adv_io::read_input("d3/input");
+    let res1 = d3::solution1::process(&input);
     println!("{}", res1);
 
-    let res2 = d2::solution2::sum_of_powers(&input);
-    println!("{}", res2)
-
+    let res2 = d3::solution2::process(&input);
+    println!("{}", res2);
 }

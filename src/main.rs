@@ -49,5 +49,7 @@ fn main() {
     let input = adv_io::read_input("d6/input");
     let res1 = d6::solution1::process(&input);
 
-    println!("{}", res1);
+    let res2 = d6::solution2::process(&input);
+
+    println!("{}", res2);
 }

@@ -38,10 +38,16 @@ fn main() {
     // println!("{}", res2)
 
     // Day 5
-    let input = adv_io::read_input("d5/input");
-    let res1 = d5::solution1::process(&input);
-    println!("{}", res1);
+    //let input = adv_io::read_input("d5/input");
+    //let res1 = d5::solution1::process(&input);
+    //println!("{}", res1);
 
-    let res2 = d5::solution2::process(&input);
-    println!("{}", res2);
+    //let res2 = d5::solution2::process(&input);
+    //println!("{}", res2);
+
+    // Day 6
+    let input = adv_io::read_input("d6/input");
+    let res1 = d6::solution1::process(&input);
+
+    println!("{}", res1);
 }

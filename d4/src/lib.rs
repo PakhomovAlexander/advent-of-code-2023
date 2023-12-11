@@ -1,5 +1,5 @@
-pub mod solution1 {
-    struct Card {
+pub mod common {
+    pub struct Card {
         id: i32,
         win_nums: std::collections::HashSet::<i32>,
         my_nums: Vec<i32>,
@@ -84,7 +84,22 @@ pub mod solution1 {
                 i32::pow(2, score as u32)
             }
         }
+
+        pub fn number_of_winners(&self) -> i32 {
+            let mut cnt: i32 = 0;
+            for n in &self.my_nums {
+                if self.win_nums.contains(&n) {
+                    cnt += 1;
+                }
+            }
+
+            cnt
+        }
     }
+}
+
+pub mod solution1 {
+    use crate::common::Card;
 
     pub fn process(input: &Vec<String>) -> i32 {
         let mut sum = 0;
@@ -93,6 +108,45 @@ pub mod solution1 {
         }
 
         sum
+    }
+}
+
+
+pub mod solution2 {
+    use crate::common::Card;
+
+    pub fn process(input: &Vec<String>) -> i32 {
+        let mut cards: Vec<Card> = Vec::new();
+
+        for line in input {
+            cards.push(Card::parse(&line));
+        }
+
+        let mut counts: Vec<i32> = Vec::new();
+        for _ in &cards {
+            counts.push(1);
+        }
+
+        let mut i = 0;
+        while i < cards.len() {
+            let card = &cards[i];
+            let win_cards = card.number_of_winners();
+            let card_copies = counts[i];
+
+            let mut j:usize = 1;
+            while j <= win_cards as usize {
+                counts[i + j] += card_copies;
+                j += 1;
+            }
+            i += 1;
+        }
+
+        let mut acc = 0;
+        for cnt in counts {
+            acc += cnt;
+        }
+
+        acc
     }
 }
 
@@ -115,5 +169,28 @@ mod tests1 {
         .collect();
 
         assert_eq!(13, solution1::process(&input));
+    }
+}
+
+
+#[cfg(test)]
+mod tests2 {
+    use super::*;
+
+    #[test]
+    fn example_works() {
+        let input = vec![
+            "Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53",
+            "Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19",
+            "Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1",
+            "Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83",
+            "Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36",
+            "Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11",
+        ]
+        .iter()
+        .map(|&s| s.into())
+        .collect();
+
+        assert_eq!(30, solution2::process(&input));
     }
 }

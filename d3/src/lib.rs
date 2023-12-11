@@ -1,12 +1,12 @@
-pub mod solution1 {
+pub mod common {
     #[derive(Debug)]
-    struct Cursor<'a> {
-        input: &'a Vec<String>,
-        top_line: Vec<char>,
-        current_line: Vec<char>,
-        bottom_line: Vec<char>,
-        current_row_ind: usize,
-        skip_characters: Vec<char>,
+    pub struct Cursor<'a> {
+        pub input: &'a Vec<String>,
+        pub top_line: Vec<char>,
+        pub current_line: Vec<char>,
+        pub bottom_line: Vec<char>,
+        pub current_row_ind: usize,
+        pub skip_characters: Vec<char>,
     }
 
     impl Cursor<'_> {
@@ -133,20 +133,82 @@ pub mod solution1 {
             }
         }
 
-        fn read_num(&self, start_pos: usize) -> Option<(usize, i32)> {
+        fn read_num_bidirect(&self, point_position: usize, line: &Vec<char>) -> i32 {
+            let mut i = point_position as i32;
+            while i > -1 && line[i as usize].is_numeric() {
+                i -= 1;
+            }
+
+            return self.read_num_from(line, (i + 1) as usize).unwrap().1;
+        }
+
+        fn look_around_gear_for_numbers(&self, i: usize) -> Vec<i32> {
+            let mut result = Vec::new();
+
+            // process top line
+            // it means two numbers are possible to be connected on top
+            if !self.top_line[i].is_numeric() {
+                // top left corner
+                if i != 0 && self.top_line[i - 1].is_numeric() {
+                    result.push(self.read_num_bidirect(i - 1, &self.top_line));
+                }
+
+                // top right corner
+                if i != (self.width() - 1) && self.top_line[i + 1].is_numeric() {
+                    result.push(self.read_num_bidirect(i + 1, &self.top_line));
+                }
+            } else {
+                // only one number is posible on top
+                result.push(self.read_num_bidirect(i, &self.top_line));
+            }
+
+            // process bottom line
+            // it means two numbers are possible to be connected in bottom
+            if !self.bottom_line[i].is_numeric() {
+                // bottom left corner
+                if i != 0 && self.bottom_line[i - 1].is_numeric() {
+                    result.push(self.read_num_bidirect(i - 1, &self.bottom_line));
+                }
+
+                // bottom right corner
+                if i != (self.width() - 1) && self.bottom_line[i + 1].is_numeric() {
+                    result.push(self.read_num_bidirect(i + 1, &self.bottom_line));
+                }
+            } else {
+                // only one number is posible in bottom
+                result.push(self.read_num_bidirect(i, &self.bottom_line));
+            }
+
+            // process left and right current line
+            if i != 0 && self.current_line[i - 1].is_numeric() {
+                result.push(self.read_num_bidirect(i - 1, &self.current_line));
+            }
+
+            if i != (self.width() - 1) && self.current_line[i + 1].is_numeric() {
+                result.push(self.read_num_bidirect(i + 1, &self.current_line));
+            }
+
+            return result;
+        }
+
+        fn read_num_from(&self, line: &Vec<char>, start_pos: usize) -> Option<(usize, i32)> {
             let mut i = start_pos;
             let mut num_str = String::new();
 
-            while i < self.width() && self.current_line[i].is_numeric() {
-                num_str.push(self.current_line[i]);
+            while i < line.len() && line[i].is_numeric() {
+                num_str.push(line[i]);
                 i += 1;
             }
 
-            if i == self.width() && !self.current_line[i - 1].is_numeric() {
+            if i == line.len() && !line[i - 1].is_numeric() {
                 None
             } else {
                 Some((i, num_str.parse().unwrap()))
             }
+        }
+
+        fn read_num(&self, start_pos: usize) -> Option<(usize, i32)> {
+            self.read_num_from(&self.current_line, start_pos)
         }
 
         // .....
@@ -182,11 +244,50 @@ pub mod solution1 {
 
             result
         }
+
+        fn find_next_gear_numbers(&self, start_pos: usize) -> Option<(usize, i32, i32)> {
+            let mut i = start_pos;
+            while i < self.width() && self.current_line[i] != '*' {
+                i += 1;
+            }
+
+            if i == self.width() {
+                return None;
+            }
+
+            let numbers = self.look_around_gear_for_numbers(i);
+            if numbers.len() == 2 {
+                return Some((i + 1, numbers[0], numbers[1]));
+            } else {
+                return Some((i + 1, 0, 0));
+            }
+        }
+
+        pub fn sum_current_line_gear(&mut self) -> i64 {
+            assert!(self.current_row_ind < self.input.len());
+
+            let mut sum = 0;
+            let mut i = 0;
+            while i < self.current_line.len() {
+                if let Some((next_i, number1, number2)) = self.find_next_gear_numbers(i) {
+                    i = next_i;
+                    sum += number1 as i64 * number2 as i64;
+                } else {
+                    break;
+                }
+            }
+
+            sum
+        }
     }
+}
+
+pub mod solution1 {
+    use crate::common;
 
     pub fn process(input: &Vec<String>) -> i32 {
         let mut total_sum = 0;
-        let mut cursor = Cursor::init(&input);
+        let mut cursor = common::Cursor::init(&input);
 
         loop {
             let s = cursor.sum_current_line();
@@ -197,6 +298,89 @@ pub mod solution1 {
         }
 
         total_sum
+    }
+}
+
+pub mod solution2 {
+    use crate::common;
+
+    pub fn process(input: &Vec<String>) -> i64 {
+        let mut total_sum = 0;
+        let mut cursor = common::Cursor::init(&input);
+
+        loop {
+            let s = cursor.sum_current_line_gear();
+            total_sum += s;
+            if !cursor.move_next() {
+                break;
+            }
+        }
+
+        total_sum
+    }
+}
+
+#[cfg(test)]
+mod tests2 {
+    use super::*;
+
+    #[test]
+    fn exmaple_2_works() {
+        let input = vec![
+            "467..114..",
+            "...*......",
+            "..35..633.",
+            "......#...",
+            "617*......",
+            ".....+.58.",
+            "..592.....",
+            "......755.",
+            "...$.*....",
+            ".664.598..",
+        ]
+        .iter()
+        .map(|&s| s.into())
+        .collect();
+
+        assert_eq!(467 * 35 + 755 * 598, solution2::process(&input));
+    }
+
+    #[test]
+    fn corner_cases() {
+        let input = vec![
+            "11.....", "11*....", ".......", "22*22..", "......3", ".....*3", ".......", "....10*",
+            ".....10", "..44...", "...*...", "....44.", "*55....", ".55..66", "......*", ".....66",
+            "77.77..", "..*...."
+        ]
+        .iter()
+        .map(|&s| s.into())
+        .collect();
+
+        assert_eq!(
+            11 * 11 + 22 * 22 + 3 * 3 + 10 * 10 + 44 * 44 + 55 * 55 + 66 * 66 + 77 * 77,
+            solution2::process(&input)
+        );
+    }
+
+    #[test]
+    fn real_input() {
+        let line1_sum = 0;
+        let line2_sum = 860 * 985;
+        let line3_sum = 0;
+
+        let input = vec![
+"........518..........918..-....472..172....776......207............38........................860..............274..945.....162..............",
+"....984.....%...............+..712...83..*....130..................+....*...545.............*......+.............../.727./....826......*....",
+"................490......519../...........16....%...42.822..486......214..../...............985.480..............798....................249.",
+        ]
+            .iter()
+            .map(|&s| s.into())
+            .collect();
+
+        assert_eq!(
+            line1_sum + line2_sum + line3_sum,
+            solution2::process(&input)
+        )
     }
 }
 
@@ -315,13 +499,9 @@ mod tests1 {
     #[test]
     fn first_lines_from_real_input() {
         let first_line_sum = 452 + 712 + 996 + 646 + 40 + 1 + 958 + 553;
-        dbg!(first_line_sum);
         let second_line_sum = 661 + 844 + 781 + 163 + 698 + 239 + 57;
-        dbg!(second_line_sum);
         let third_line_sum = 139 + 282 + 301;
-        dbg!(third_line_sum);
         let forth_line_sum = 918 + 172 + 776 + 860;
-        dbg!(forth_line_sum);
 
         let input = vec![
 ".........398.............551.....................452..................712.996.................646.40...1.....875..958.553...................",

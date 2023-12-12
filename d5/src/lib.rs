@@ -31,7 +31,6 @@ pub mod common {
         pub fn sort(&mut self) {
             self.parts
                 .sort_by(|a, b| a.destination_start.cmp(&b.destination_start));
-            dbg!(self);
         }
 
         pub fn convert(&self, value: i64) -> i64 {
@@ -60,7 +59,7 @@ pub mod common {
                 ) {
                     let l_diff = l - p.destination_start;
                     let r_diff = r - p.destination_start;
-                    &res.push((p.source_start + l_diff, p.source_start + r_diff));
+                    res.push((p.source_start + l_diff, p.source_start + r_diff));
                 }
             }
 
@@ -150,7 +149,7 @@ pub mod solution2 {
     use crate::common;
 
     fn read_seeds(line: &String) -> Vec<(i64, i64)> {
-        let mut seeds_definition = common::numbers(&String::from(&line[6..])); // skip 'seeds: '
+        let seeds_definition = common::numbers(&String::from(&line[6..])); // skip 'seeds: '
         let mut seeds = Vec::new();
 
         let mut i = 0;
@@ -167,9 +166,7 @@ pub mod solution2 {
 
     pub fn process(input: &Vec<String>) -> i64 {
         let mut i = 2;
-        let mut seeds = read_seeds(&input[0]);
-        seeds.sort_by(|t1, t2| t1.0.cmp(&t2.0));
-        dbg!(&seeds);
+        let seeds = read_seeds(&input[0]);
 
         let mut maps = Vec::new();
 
@@ -181,54 +178,32 @@ pub mod solution2 {
                 current_map.parts.push(part);
                 i += 1;
             }
-            &current_map.sort();
+            current_map.sort();
             maps.push(current_map);
 
             i += 1; // skip an empty line
         }
 
-        for p in &maps[0].parts {
-            if let Some(min) = find_min_seed_for(
-                p.destination_start,
-                p.destination_start + p.size,
-                1,
-                &maps,
-                &seeds,
-            ) {
-                return min;
-            }
-        }
-
-        return -1;
-    }
-
-    fn find_min_seed_for(
-        start: i64,
-        end: i64,
-        i: usize,
-        maps: &Vec<common::Map>,
-        seeds: &Vec<(i64, i64)>,
-    ) -> Option<i64> {
-        if i == maps.len() {
-            for seed in seeds {
-                if let Some((l, r)) = common::Map::intersection(seed.0, seed.0 + seed.1, start, end)
-                {
-                    return Some(l);
+        let mut min = 100000000;
+        for (start_seed, cnt) in seeds {
+            println!("Start processing seeds: ({}, {})", start_seed, cnt);
+            let upper_seed = start_seed;
+            let mut curr_diff = 0;
+            while curr_diff < cnt {
+                let mut running_seed = upper_seed + curr_diff;
+                for map in &maps {
+                    running_seed = map.convert(running_seed);
                 }
+
+                if running_seed < min {
+                    min = running_seed;
+                }
+                curr_diff += 1;
             }
 
-            return None;
-        };
-
-        let map = &maps[i];
-        let paths = map.find_paths(start, end);
-        for (l, r) in paths {
-            if let Some(min) = find_min_seed_for(l, r, i + 1, &maps, &seeds) {
-                return Some(min);
-            }
         }
 
-        return None;
+        return min;
     }
 }
 

@@ -18,6 +18,24 @@ pub mod common {
 
         res
     }
+
+    pub fn read_num(line: &String) -> i64 {
+        let chars: Vec<char> = line.chars().collect();
+        let mut curr_num = String::new();
+        let mut i = 0;
+        while i < chars.len() {
+            while !chars[i].is_numeric() {
+                i += 1;
+            }
+            while i < chars.len() && chars[i].is_numeric() {
+                curr_num.push(chars[i]);
+                i += 1;
+            }
+            i += 1;
+        }
+
+        curr_num.parse().unwrap()
+    }
 }
 
 pub mod solution1 {
@@ -32,14 +50,13 @@ pub mod solution1 {
 
     fn get_number_of_variants(t: i32, d: i32) -> i32 {
         let mut cnt = 0;
-        for i in 0..t+1 {
-           if get_distance(i, t) > d {
-              cnt += 1;
-           }
+        for i in 0..t + 1 {
+            if get_distance(i, t) > d {
+                cnt += 1;
+            }
         }
 
         cnt
-
     }
 
     pub fn process(input: &Vec<String>) -> i64 {
@@ -62,14 +79,61 @@ pub mod solution1 {
     }
 }
 
+pub mod solution2 {
+    use crate::common;
+
+    fn get_distance(hold_time: i32, total_time: i32) -> i64 {
+        let movement_time = total_time as i64 - hold_time as i64;
+        let speed = hold_time as i64;
+
+        movement_time * speed
+    }
+
+    fn get_number_of_variants(t: i32, d: i64) -> i32 {
+        let mut cnt = 0;
+        for i in 0..t + 1 {
+            if get_distance(i, t) > d {
+                cnt += 1;
+            }
+        }
+
+        cnt
+    }
+
+    pub fn process(input: &Vec<String>) -> i32 {
+        let time = common::read_num(&input[0]);
+        let distance = common::read_num(&input[1]);
+
+        get_number_of_variants(time as i32, distance)
+    }
+}
+
 #[cfg(test)]
 mod tests1 {
     use super::*;
 
     #[test]
     fn example_works() {
-        let input = vec!["Time:      7  15   30".to_string(), "Distance:  9  40  200".to_string()];
+        let input = vec![
+            "Time:      7  15   30".to_string(),
+            "Distance:  9  40  200".to_string(),
+        ];
 
         assert_eq!(288, solution1::process(&input));
+    }
+}
+
+#[cfg(test)]
+mod tests2 {
+    use super::*;
+
+    #[test]
+    fn example_works() {
+        let input = vec![
+            "Time:      7  15   30".to_string(),
+            "Distance:  9  40  200".to_string(),
+        ];
+
+        assert_eq!(71503, solution2::process(&input));
     }
 }
